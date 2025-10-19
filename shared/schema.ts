@@ -32,6 +32,9 @@ export const accessibilityChecks = pgTable("accessibility_checks", {
   htmlValidationMessages: jsonb("html_validation_messages"),
   htmlValidationFailed: integer("html_validation_failed").notNull().default(0),
   htmlValidationError: text("html_validation_error"),
+  
+  // Extended WCAG checks
+  extendedChecks: jsonb("extended_checks"),
 });
 
 export const insertAccessibilityCheckSchema = createInsertSchema(accessibilityChecks).omit({
@@ -66,3 +69,44 @@ export const violationCategories = {
   forms: ['label', 'button-name', 'form-field-multiple-labels', 'input-button-name'],
   aria: ['aria-allowed-attr', 'aria-required-attr', 'aria-valid-attr-value', 'aria-roles'],
 } as const;
+
+// Extended WCAG checks interface
+export interface ExtendedChecks {
+  viewport: {
+    blocksZoom: boolean;
+    userScalable: boolean;
+    maxScale: number | null;
+    issues: string[];
+  };
+  autoplayMedia: {
+    hasAutoplayAudio: boolean;
+    hasAutoplayVideo: boolean;
+    elements: Array<{
+      tag: string;
+      hasControls: boolean;
+      selector: string;
+    }>;
+    issues: string[];
+  };
+  tabOrder: {
+    hasPositiveTabindex: boolean;
+    maxTabindex: number;
+    elementsWithTabindex: Array<{
+      selector: string;
+      tabindex: number;
+    }>;
+    issues: string[];
+  };
+  focusVisible: {
+    hasFocusStyles: boolean;
+    elementsWithoutFocus: number;
+    checkedSelectors: string[];
+    issues: string[];
+  };
+  timing: {
+    hasSetTimeout: boolean;
+    hasSetInterval: boolean;
+    refreshMeta: boolean;
+    issues: string[];
+  };
+}

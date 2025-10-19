@@ -9,6 +9,7 @@ import { AlertCircle, CheckCircle2, AlertTriangle, Info, Loader2, Search, Extern
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ViolationsList } from "@/components/violations-list";
 import { HTMLValidationList } from "@/components/html-validation-list";
+import { ExtendedChecksList } from "@/components/extended-checks-list";
 import type { AccessibilityCheck } from "@shared/schema";
 
 export default function Home() {
@@ -235,8 +236,15 @@ export default function Home() {
                   errorCount={checkResult.htmlErrorCount || 0}
                   warningCount={checkResult.htmlWarningCount || 0}
                   validationFailed={!!checkResult.htmlValidationFailed}
-                  validationError={checkResult.htmlValidationError}
+                  validationError={checkResult.htmlValidationError || undefined}
                 />
+              </div>
+            )}
+
+            {/* Extended Checks */}
+            {checkResult.extendedChecks && (
+              <div className="mb-8">
+                <ExtendedChecksList checks={checkResult.extendedChecks as any} />
               </div>
             )}
 

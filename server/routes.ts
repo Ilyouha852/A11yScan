@@ -37,6 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         htmlValidationMessages: analysisResult.htmlValidationMessages as any,
         htmlValidationFailed: analysisResult.htmlValidationFailed ? 1 : 0,
         htmlValidationError: analysisResult.htmlValidationError,
+        extendedChecks: analysisResult.extendedChecks as any,
       });
 
       res.json(check);
