@@ -2,6 +2,11 @@
 import puppeteer from "puppeteer";
 import type { ViolationDetail } from "@shared/schema";
 import { execSync } from "child_process";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export interface AnalysisResult {
   url: string;
@@ -62,8 +67,9 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
     const pageTitle = await page.title();
 
     // Inject axe-core library
+    const axeCorePath = join(__dirname, '..', 'node_modules', 'axe-core', 'axe.min.js');
     await page.addScriptTag({
-      path: require.resolve('axe-core'),
+      path: axeCorePath,
     });
 
     // Run axe-core accessibility checks
