@@ -234,11 +234,23 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
     // Set viewport for consistent testing
     await page.setViewport({ width: 1920, height: 1080 });
     
-    // Navigate to the URL with timeout
-    await page.goto(url, {
-      waitUntil: 'networkidle0',
-      timeout: 30000,
-    });
+    console.log(`[Accessibility] Starting analysis for: ${url}`);
+    
+    // Navigate to the URL with more flexible settings
+    try {
+      await page.goto(url, {
+        waitUntil: 'domcontentloaded',
+        timeout: 60000,
+      });
+      
+      // Wait a bit for dynamic content
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log(`[Accessibility] Page loaded successfully`);
+    } catch (navError) {
+      console.error(`[Accessibility] Navigation error:`, navError);
+      throw new Error(`Cannot load page: ${navError instanceof Error ? navError.message : 'Unknown error'}`);
+    }
 
     // Get the final URL (after redirects) and page title
     const testedUrl = page.url();
