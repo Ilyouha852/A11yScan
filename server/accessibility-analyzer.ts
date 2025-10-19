@@ -1,6 +1,7 @@
 // Accessibility analyzer module using Puppeteer and axe-core
 import puppeteer from "puppeteer";
 import type { ViolationDetail } from "@shared/schema";
+import { execSync } from "child_process";
 
 export interface AnalysisResult {
   url: string;
@@ -17,13 +18,26 @@ export interface AnalysisResult {
   incomplete: any[];
 }
 
+// Get the system chromium path
+function getChromiumPath(): string | undefined {
+  try {
+    const chromiumPath = execSync('which chromium', { encoding: 'utf-8' }).trim();
+    return chromiumPath || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function analyzeAccessibility(url: string): Promise<AnalysisResult> {
   let browser;
   
   try {
+    const chromiumPath = getChromiumPath();
+    
     // Launch Puppeteer in headless mode
     browser = await puppeteer.launch({
       headless: true,
+      executablePath: chromiumPath,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
