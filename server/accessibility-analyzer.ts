@@ -4,6 +4,7 @@ import type { ViolationDetail } from "@shared/schema";
 import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { validateHTML, type HTMLValidationMessage } from "./html-validator";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,6 +22,9 @@ export interface AnalysisResult {
   violations: ViolationDetail[];
   passes: any[];
   incomplete: any[];
+  htmlErrorCount: number;
+  htmlWarningCount: number;
+  htmlValidationMessages: HTMLValidationMessage[];
 }
 
 // Get the system chromium path
@@ -65,6 +69,9 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
     // Get the final URL (after redirects) and page title
     const testedUrl = page.url();
     const pageTitle = await page.title();
+
+    // Get HTML content for validation
+    const htmlContent = await page.content();
 
     // Inject axe-core library
     const axeCorePath = join(__dirname, '..', 'node_modules', 'axe-core', 'axe.min.js');
@@ -113,6 +120,9 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
       }
     });
 
+    // Perform HTML validation
+    const htmlValidation = await validateHTML(htmlContent);
+
     return {
       url,
       testedUrl,
@@ -126,6 +136,9 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
       violations: axeResults.violations || [],
       passes: axeResults.passes || [],
       incomplete: axeResults.incomplete || [],
+      htmlErrorCount: htmlValidation.errorCount,
+      htmlWarningCount: htmlValidation.warningCount,
+      htmlValidationMessages: htmlValidation.messages,
     };
 
   } catch (error) {

@@ -25,6 +25,11 @@ export const accessibilityChecks = pgTable("accessibility_checks", {
   // Page metadata
   pageTitle: text("page_title"),
   testedUrl: text("tested_url"), // Final URL after redirects
+  
+  // HTML validation results
+  htmlErrorCount: integer("html_error_count").notNull().default(0),
+  htmlWarningCount: integer("html_warning_count").notNull().default(0),
+  htmlValidationMessages: jsonb("html_validation_messages"),
 });
 
 export const insertAccessibilityCheckSchema = createInsertSchema(accessibilityChecks).omit({
