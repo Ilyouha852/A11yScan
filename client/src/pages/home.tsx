@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle2, AlertTriangle, Info, Loader2, Search, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ViolationsList } from "@/components/violations-list";
+import { HTMLValidationList } from "@/components/html-validation-list";
 import type { AccessibilityCheck } from "@shared/schema";
 
 export default function Home() {
@@ -225,6 +226,17 @@ export default function Home() {
                 </div>
               </CardHeader>
             </Card>
+
+            {/* HTML Validation Results */}
+            {checkResult.htmlValidationMessages && checkResult.htmlValidationMessages.length > 0 && (
+              <div className="mb-8">
+                <HTMLValidationList 
+                  messages={checkResult.htmlValidationMessages as any}
+                  errorCount={checkResult.htmlErrorCount || 0}
+                  warningCount={checkResult.htmlWarningCount || 0}
+                />
+              </div>
+            )}
 
             {/* Violations List */}
             {checkResult.totalViolations > 0 ? (
