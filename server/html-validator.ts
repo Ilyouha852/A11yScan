@@ -16,6 +16,8 @@ export interface HTMLValidationResult {
   errorCount: number;
   warningCount: number;
   messages: HTMLValidationMessage[];
+  validationFailed: boolean;
+  validationError?: string;
 }
 
 export async function validateHTML(html: string): Promise<HTMLValidationResult> {
@@ -65,13 +67,17 @@ export async function validateHTML(html: string): Promise<HTMLValidationResult> 
       errorCount,
       warningCount,
       messages,
+      validationFailed: false,
     };
   } catch (error) {
     console.error('Error validating HTML:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return {
       errorCount: 0,
       warningCount: 0,
       messages: [],
+      validationFailed: true,
+      validationError: errorMessage,
     };
   }
 }

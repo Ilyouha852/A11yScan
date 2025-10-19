@@ -17,9 +17,42 @@ interface HTMLValidationListProps {
   messages: HTMLValidationMessage[];
   errorCount: number;
   warningCount: number;
+  validationFailed?: boolean;
+  validationError?: string;
 }
 
-export function HTMLValidationList({ messages, errorCount, warningCount }: HTMLValidationListProps) {
+export function HTMLValidationList({ messages, errorCount, warningCount, validationFailed, validationError }: HTMLValidationListProps) {
+  // Show validation failure warning
+  if (validationFailed) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Code className="h-5 w-5" />
+            HTML-валидация (критерий 4.1.1 WCAG)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-start gap-3 p-4 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-yellow-900 dark:text-yellow-100 mb-1">
+                HTML-валидация не выполнена
+              </p>
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                {validationError || "Не удалось подключиться к сервису валидации W3C. Попробуйте позже."}
+              </p>
+              <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
+                Публичный сервис валидации W3C имеет ограничения по количеству запросов. 
+                Рекомендуется использовать локальный валидатор для регулярных проверок.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!messages || messages.length === 0) {
     return null;
   }

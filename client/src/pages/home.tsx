@@ -228,12 +228,14 @@ export default function Home() {
             </Card>
 
             {/* HTML Validation Results */}
-            {checkResult.htmlValidationMessages && checkResult.htmlValidationMessages.length > 0 && (
+            {((checkResult.htmlValidationMessages && Array.isArray(checkResult.htmlValidationMessages) && checkResult.htmlValidationMessages.length > 0) || checkResult.htmlValidationFailed) && (
               <div className="mb-8">
                 <HTMLValidationList 
                   messages={checkResult.htmlValidationMessages as any}
                   errorCount={checkResult.htmlErrorCount || 0}
                   warningCount={checkResult.htmlWarningCount || 0}
+                  validationFailed={!!checkResult.htmlValidationFailed}
+                  validationError={checkResult.htmlValidationError}
                 />
               </div>
             )}

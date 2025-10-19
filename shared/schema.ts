@@ -30,6 +30,8 @@ export const accessibilityChecks = pgTable("accessibility_checks", {
   htmlErrorCount: integer("html_error_count").notNull().default(0),
   htmlWarningCount: integer("html_warning_count").notNull().default(0),
   htmlValidationMessages: jsonb("html_validation_messages"),
+  htmlValidationFailed: integer("html_validation_failed").notNull().default(0),
+  htmlValidationError: text("html_validation_error"),
 });
 
 export const insertAccessibilityCheckSchema = createInsertSchema(accessibilityChecks).omit({

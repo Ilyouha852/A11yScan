@@ -25,6 +25,8 @@ export interface AnalysisResult {
   htmlErrorCount: number;
   htmlWarningCount: number;
   htmlValidationMessages: HTMLValidationMessage[];
+  htmlValidationFailed: boolean;
+  htmlValidationError?: string;
 }
 
 // Get the system chromium path
@@ -139,6 +141,8 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
       htmlErrorCount: htmlValidation.errorCount,
       htmlWarningCount: htmlValidation.warningCount,
       htmlValidationMessages: htmlValidation.messages,
+      htmlValidationFailed: htmlValidation.validationFailed,
+      htmlValidationError: htmlValidation.validationError,
     };
 
   } catch (error) {
