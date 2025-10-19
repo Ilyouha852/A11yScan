@@ -12,29 +12,17 @@ import type { AccessibilityCheck } from "@shared/schema";
 
 export default function Home() {
   const [url, setUrl] = useState("");
-  const [lastCheckId, setLastCheckId] = useState<string | null>(null);
-
-  // Fetch the latest check result
-  const { data: checkResult, isLoading: isLoadingResult } = useQuery<AccessibilityCheck>({
-    queryKey: ["/api/checks", lastCheckId],
-    queryFn: async () => {
-      if (!lastCheckId) throw new Error("No check ID");
-      const response = await fetch(`/api/checks/${lastCheckId}`);
-      if (!response.ok) throw new Error("Failed to fetch check");
-      return response.json();
-    },
-    enabled: !!lastCheckId,
-  });
+  const [currentResult, setCurrentResult] = useState<AccessibilityCheck | null>(null);
 
   // Mutation for analyzing a URL
   const analyzeMutation = useMutation({
     mutationFn: async (urlToCheck: string) => {
-      const result = await apiRequest<AccessibilityCheck>("POST", "/api/analyze", { url: urlToCheck });
-      return result;
+      const response = await apiRequest("POST", "/api/analyze", { url: urlToCheck });
+      const result = await response.json();
+      return result as AccessibilityCheck;
     },
     onSuccess: (data) => {
-      setLastCheckId(data.id);
-      queryClient.invalidateQueries({ queryKey: ["/api/checks"] });
+      setCurrentResult(data);
       queryClient.invalidateQueries({ queryKey: ["/api/history"] });
     },
   });
@@ -47,6 +35,7 @@ export default function Home() {
   };
 
   const isAnalyzing = analyzeMutation.isPending;
+  const checkResult = currentResult;
   const hasResults = checkResult && !isAnalyzing;
 
   return (
