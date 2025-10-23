@@ -1,265 +1,49 @@
 # Веб-инструмент проверки доступности сайтов
 
-## Обзор проекта
+## Overview
+This project is a professional web application designed for automated accessibility testing of websites against WCAG AA standards. It leverages Puppeteer for headless browser page loading and axe-core for comprehensive accessibility analysis. The tool aims to help small and medium businesses improve their web accessibility by providing detailed reports, historical tracking, and an intuitive user interface. Key capabilities include automated scanning, detailed reporting with WCAG links and remediation advice, and a user-friendly interface with responsive design and theme options. The business vision is to provide an essential tool for web accessibility, fostering inclusive web environments.
 
-Профессиональное веб-приложение для автоматизированной проверки соответствия веб-сайтов стандартам доступности WCAG AA. Инструмент использует Puppeteer для загрузки страниц в headless-браузере и axe-core для комплексного анализа доступности.
+## User Preferences
+I prefer detailed explanations.
+I want iterative development.
+Ask before making major changes.
 
-**Дата последнего обновления**: 19 октября 2025
+## System Architecture
 
-## Основные возможности
+### UI/UX Decisions
+The application features a responsive design, supporting both dark and light themes. The interface is professional and accessible, adhering to accessibility guidelines like minimum contrast ratios (4.5:1), keyboard navigability, visible focus indicators, and semantic HTML structure. UI components are built using Shadcn UI with Tailwind CSS, ensuring a modern and consistent look. Accessibility violation lists are collapsible by category, and a new section displays passed checks. Navigation is enhanced by linking metric cards (Critical, Warnings, Passed) to their respective sections.
 
-### Реализованные функции MVP
+### Technical Implementations
+The frontend is developed with React and TypeScript, utilizing Wouter for routing and TanStack Query for state management. The backend is an Express.js server, integrating Puppeteer for headless browser automation and axe-core for WCAG accessibility scanning. Data persistence is handled by PostgreSQL (Neon) with Drizzle ORM. Zod is used for validation.
 
-1. **Анализ доступности сайтов**
-   - Автоматическая проверка любого веб-сайта по URL
-   - Использование Puppeteer для загрузки страниц
-   - Интеграция axe-core для сканирования по стандартам WCAG 2.1 AA
-   - Поддержка проверки после редиректов
+### Feature Specifications
+- **Accessibility Analysis**: Automatic scanning of any URL using Puppeteer and axe-core for WCAG 2.1 AA standards, including post-redirect checks.
+- **Detailed Reports**: Categorized violations (e.g., images, contrast, navigation) with criticality levels, affected HTML elements, WCAG documentation links, and remediation recommendations.
+- **Statistics**: Overall violation counts, breakdown by criticality, passed checks, and visual metric cards.
+- **Check History**: Storage of all results in PostgreSQL, showing the last 50 checks with dates, URLs, and quick access to details.
+- **HTML Validation**: Comprehensive HTML syntax checking, including nesting, deprecated attributes, and general W3C compliance.
+- **Accessibility Checks**: Includes core axe-core checks (images, contrast, navigation, semantic structure, forms, ARIA) and extended automated checks (scaling, media autoplay, tabindex, focus visibility, time limits).
 
-2. **Детальные отчеты**
-   - Категоризация нарушений: изображения, контрастность, навигация, семантика, формы, ARIA
-   - Уровни критичности: критические, серьезные, умеренные, незначительные
-   - Информация о затронутых HTML элементах
-   - Ссылки на документацию WCAG для каждого нарушения
-   - Рекомендации по исправлению
+### System Design Choices
+- **Puppeteer**: Chosen over static HTML analysis to accurately process JavaScript-rendered content and reflect the final DOM state.
+- **PostgreSQL**: Selected for reliable history storage, flexible JSONB support for violations, and future complex query capabilities.
+- **Categorization of Violations**: Designed to simplify issue comprehension, prioritize fixes, and align with WCAG categories.
 
-3. **Статистика проверок**
-   - Общее количество нарушений
-   - Разбивка по уровням критичности
-   - Количество пройденных проверок
-   - Визуальные карточки с метриками
+## External Dependencies
 
-4. **История проверок**
-   - Сохранение всех результатов в PostgreSQL
-   - Просмотр последних 50 проверок
-   - Информация о дате проверки и URL
-   - Быстрый доступ к проверенным сайтам
-
-5. **Пользовательский интерфейс**
-   - Адаптивный дизайн для всех устройств
-   - Темная и светлая темы
-   - Профессиональный, доступный интерфейс
-   - Состояния загрузки и ошибок
-   - Примеры URL для быстрого тестирования
-
-## Техническая архитектура
-
-### Frontend
-- **Фреймворк**: React с TypeScript
-- **Маршрутизация**: Wouter
-- **Управление состоянием**: TanStack Query (React Query)
-- **UI компоненты**: Shadcn UI с Tailwind CSS
-- **Иконки**: Lucide React
-
-### Backend
-- **Сервер**: Express.js
-- **Анализ доступности**: 
-  - Puppeteer (headless Chrome)
-  - axe-core (библиотека проверки WCAG)
-- **База данных**: PostgreSQL (Neon)
-- **ORM**: Drizzle ORM
-- **Валидация**: Zod
-
-### API Endpoints
-
-#### POST /api/analyze
-Запускает проверку доступности для указанного URL.
-
-**Request Body**:
-```json
-{
-  "url": "https://example.com"
-}
-```
-
-**Response**: Объект AccessibilityCheck с результатами анализа
-
-#### GET /api/checks/:id
-Получает результаты конкретной проверки по ID.
-
-**Response**: Объект AccessibilityCheck
-
-#### GET /api/history
-Возвращает историю всех проверок (последние 50).
-
-**Response**: Массив объектов AccessibilityCheck
-
-## Структура базы данных
-
-### Таблица: accessibility_checks
-
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | varchar (UUID) | Уникальный идентификатор |
-| url | text | Исходный URL для проверки |
-| checked_at | timestamp | Дата и время проверки |
-| total_violations | integer | Общее количество нарушений |
-| critical_count | integer | Критические нарушения |
-| serious_count | integer | Серьезные нарушения |
-| moderate_count | integer | Умеренные нарушения |
-| minor_count | integer | Незначительные нарушения |
-| passed_count | integer | Пройденные проверки |
-| violations | jsonb | Полный список нарушений |
-| passes | jsonb | Пройденные проверки |
-| incomplete | jsonb | Незавершенные проверки |
-| page_title | text | Заголовок страницы |
-| tested_url | text | Финальный URL после редиректов |
-
-## Проверки доступности
-
-Инструмент автоматически проверяет:
-
-### Основные проверки (axe-core)
-
-1. **Изображения (WCAG 1.1.1)**
-   - Наличие alt-текстов
-   - Корректность описаний
-   - Избыточность текста
-
-2. **Контрастность (WCAG 1.4.3)**
-   - Соотношение контраста текста и фона (минимум 4.5:1)
-   - Контраст крупного текста (минимум 3:1)
-
-3. **Навигация (WCAG 2.1.1, 2.4.7)**
-   - Доступность с клавиатуры
-   - Видимость фокуса
-   - Порядок табуляции
-   - Механизмы пропуска блоков
-
-4. **Семантическая структура (WCAG 1.3.1)**
-   - Иерархия заголовков
-   - Использование landmarks
-   - Списки и их структура
-
-5. **Формы (WCAG 3.3.2)**
-   - Связь меток с полями
-   - Имена кнопок
-   - Атрибуты ARIA
-
-6. **ARIA (WCAG 4.1.2)**
-   - Корректность атрибутов
-   - Валидность ролей
-   - Требуемые атрибуты
-
-### Расширенные автоматические проверки
-
-7. **Масштабирование (WCAG 1.4.4)**
-   - Блокировка масштабирования через viewport meta
-   - Ограничения maximum-scale < 2
-   - Параметр user-scalable=no
-
-8. **Автовоспроизведение медиа (WCAG 1.4.2, 2.2.2)**
-   - Audio/video с атрибутом autoplay
-   - Наличие элементов управления
-   - Автоматическое воспроизведение звука
-
-9. **Порядок табуляции (WCAG 2.4.3)**
-   - Положительные значения tabindex
-   - Нарушение логического порядка навигации
-   - Элементы с нестандартным порядком фокуса
-
-10. **Видимость фокуса (WCAG 2.4.7)**
-    - Наличие CSS стилей для :focus
-    - Отсутствие индикаторов фокуса
-    - Проверка интерактивных элементов
-
-11. **Временные ограничения (WCAG 2.2.1)**
-    - Meta refresh теги
-    - Автоматическое обновление страницы
-    - Автоматическое перенаправление
-
-### HTML валидация
-
-12. **Синтаксис HTML (W3C Validator)**
-    - Синтаксические ошибки
-    - Неправильная вложенность тегов
-    - Устаревшие атрибуты
-
-## Руководство по использованию
-
-### Запуск проверки
-1. Введите URL сайта в поле ввода на главной странице
-2. Нажмите кнопку "Проверить"
-3. Дождитесь завершения анализа (обычно 5-15 секунд)
-4. Просмотрите результаты с детальной информацией о нарушениях
-
-### Просмотр истории
-1. Нажмите кнопку "История" в шапке сайта
-2. Просмотрите список всех выполненных проверок
-3. Нажмите на карточку для просмотра деталей
-
-### Интерпретация результатов
-- **Критические/Серьезные**: Требуют немедленного исправления
-- **Умеренные**: Важно исправить для лучшей доступности
-- **Незначительные**: Рекомендуется исправить
-
-## Дизайн и доступность
-
-Приложение следует собственным рекомендациям по доступности:
-- Минимальный контраст 4.5:1 для всего текста
-- Полная доступность с клавиатуры
-- Видимые индикаторы фокуса
-- Семантическая HTML структура
-- ARIA-метки для динамического контента
-- Поддержка программ чтения с экрана
-- Адаптивный дизайн для всех устройств
-
-## Зависимости
-
-### Основные
-- react ^18
-- express
-- puppeteer
-- axe-core
-- drizzle-orm
-- @tanstack/react-query
-- wouter
-
-### База данных
-- @neondatabase/serverless
-- PostgreSQL через DATABASE_URL
-
-## Переменные окружения
-
-- `DATABASE_URL` - строка подключения к PostgreSQL
-- `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` - параметры БД
-
-## Следующие шаги развития
-
-Планируемые функции для будущих версий:
-1. Экспорт отчетов в PDF и HTML
-2. Проверка нескольких страниц сайта (site-wide scan)
-3. Dashboard со статистикой и графиками
-4. Сравнение результатов проверок во времени
-5. Email-уведомления о критических проблемах
-6. API для интеграции с CI/CD
-7. Автоматическое расписание проверок
-8. Пользовательские правила проверки
-
-## Известные ограничения
-
-- Puppeteer может потребовать значительных ресурсов для сложных сайтов
-- Время анализа зависит от размера и сложности страницы
-- Некоторые интерактивные элементы могут требовать ручной проверки
-- Автоматические проверки не заменяют тестирование с реальными пользователями
-
-## Архитектурные решения
-
-1. **Использование Puppeteer вместо статического анализа HTML**
-   - Позволяет анализировать JavaScript-приложения
-   - Учитывает финальное состояние DOM
-   - Поддержка динамического контента
-
-2. **PostgreSQL для хранения результатов**
-   - Надежное хранение истории
-   - JSONB для гибкого хранения нарушений
-   - Возможность сложных запросов в будущем
-
-3. **Категоризация нарушений**
-   - Упрощает понимание проблем
-   - Помогает приоритизировать исправления
-   - Соответствует реальным категориям WCAG
-
-## Контакты и поддержка
-
-Проект разработан как инструмент для улучшения доступности веб-сайтов малого и среднего бизнеса.
+- **Frontend**:
+    - `react`
+    - `wouter`
+    - `@tanstack/react-query`
+    - `shadcn-ui` (with `tailwind-css`)
+    - `lucide-react`
+- **Backend**:
+    - `express`
+    - `puppeteer`
+    - `axe-core`
+    - `drizzle-orm`
+- **Database**:
+    - `PostgreSQL` (specifically `Neon` for serverless)
+    - `@neondatabase/serverless`
+- **Validation**:
+    - `zod`
