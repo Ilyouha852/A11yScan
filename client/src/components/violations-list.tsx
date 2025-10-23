@@ -22,6 +22,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import type { ViolationDetail } from "@shared/schema";
+import { translateViolationHelp, translateViolationDescription, translateFailureSummary } from "@/lib/translations";
 
 interface ViolationsListProps {
   violations: ViolationDetail[];
@@ -170,7 +171,7 @@ export function ViolationsList({ violations }: ViolationsListProps) {
                           <ImpactIcon className={`h-5 w-5 flex-shrink-0 mt-0.5 text-${impactColor}`} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="font-semibold">{violation.help}</span>
+                              <span className="font-semibold">{translateViolationHelp(violation.id, violation.help)}</span>
                               <Badge
                                 variant={impactColor as any}
                                 className="text-xs"
@@ -183,7 +184,7 @@ export function ViolationsList({ violations }: ViolationsListProps) {
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              {violation.description}
+                              {translateViolationDescription(violation.id, violation.description)}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
                               Затронуто элементов: {violation.nodes?.length || 0}
@@ -260,7 +261,7 @@ export function ViolationsList({ violations }: ViolationsListProps) {
                                           Проблема:
                                         </p>
                                         <p className="text-xs text-foreground">
-                                          {node.failureSummary}
+                                          {translateFailureSummary(node.failureSummary)}
                                         </p>
                                       </div>
                                     )}
