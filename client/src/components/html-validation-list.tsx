@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, AlertTriangle, Info, Code } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { translateHTMLValidationMessage } from "@/lib/translations";
 
 interface HTMLValidationMessage {
   type: 'error' | 'warning' | 'info';
@@ -126,7 +127,7 @@ export function HTMLValidationList({ messages, errorCount, warningCount, validat
                         Строка {msg.firstLine}:{msg.firstColumn}
                       </span>
                     </div>
-                    <p className="text-sm font-medium break-words">{msg.message}</p>
+                    <p className="text-sm font-medium break-words">{translateHTMLValidationMessage(msg.message)}</p>
                   </div>
                 </div>
               </AccordionTrigger>

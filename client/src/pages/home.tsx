@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ViolationsList } from "@/components/violations-list";
 import { HTMLValidationList } from "@/components/html-validation-list";
 import { ExtendedChecksList } from "@/components/extended-checks-list";
+import { ErrorsSummary } from "@/components/errors-summary";
 import type { AccessibilityCheck } from "@shared/schema";
 
 export default function Home() {
@@ -47,7 +48,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Проверка доступности</h1>
-            <p className="text-sm text-muted-foreground">Аудит соответствия WCAG AA</p>
+            <p className="text-sm text-muted-foreground">Анализ веб-сайтов на соответствие стандартам WCAG AA и валидация HTML-кода</p>
           </div>
         </div>
       </header>
@@ -227,6 +228,16 @@ export default function Home() {
                 </div>
               </CardHeader>
             </Card>
+
+            {/* Errors Summary */}
+            {(checkResult.totalViolations > 0 || checkResult.htmlErrorCount > 0) && (
+              <ErrorsSummary 
+                violations={checkResult.violations as any}
+                htmlErrorCount={checkResult.htmlErrorCount || 0}
+                htmlWarningCount={checkResult.htmlWarningCount || 0}
+                extendedChecks={checkResult.extendedChecks as any}
+              />
+            )}
 
             {/* HTML Validation Results */}
             {((checkResult.htmlValidationMessages && Array.isArray(checkResult.htmlValidationMessages) && checkResult.htmlValidationMessages.length > 0) || checkResult.htmlValidationFailed) && (
