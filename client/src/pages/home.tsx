@@ -11,6 +11,7 @@ import { ViolationsList } from "@/components/violations-list";
 import { HTMLValidationList } from "@/components/html-validation-list";
 import { ExtendedChecksList } from "@/components/extended-checks-list";
 import { ErrorsSummary } from "@/components/errors-summary";
+import { PassedChecksList } from "@/components/passed-checks-list";
 import type { AccessibilityCheck } from "@shared/schema";
 
 export default function Home() {
@@ -160,36 +161,57 @@ export default function Home() {
                 <CardHeader className="pb-2">
                   <CardDescription>Всего нарушений</CardDescription>
                   <CardTitle className="text-3xl font-bold text-foreground">
-                    {checkResult.totalViolations}
+                    {checkResult.totalViolations + (checkResult.htmlErrorCount || 0)}
                   </CardTitle>
                 </CardHeader>
               </Card>
 
-              <Card data-testid="card-critical-count">
+              <Card 
+                data-testid="card-critical-count"
+                className="cursor-pointer hover:bg-accent transition-colors"
+                onClick={() => {
+                  const element = document.getElementById('critical-section');
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardDescription>Критические</CardDescription>
                     <AlertCircle className="h-4 w-4 text-destructive" />
                   </div>
                   <CardTitle className="text-3xl font-bold text-destructive">
-                    {checkResult.criticalCount + checkResult.seriousCount}
+                    {checkResult.criticalCount + checkResult.seriousCount + (checkResult.htmlErrorCount || 0)}
                   </CardTitle>
                 </CardHeader>
               </Card>
 
-              <Card data-testid="card-warnings-count">
+              <Card 
+                data-testid="card-warnings-count"
+                className="cursor-pointer hover:bg-accent transition-colors"
+                onClick={() => {
+                  const element = document.getElementById('warnings-section');
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardDescription>Предупреждения</CardDescription>
                     <AlertTriangle className="h-4 w-4 text-warning" />
                   </div>
                   <CardTitle className="text-3xl font-bold text-warning">
-                    {checkResult.moderateCount + checkResult.minorCount}
+                    {checkResult.moderateCount + checkResult.minorCount + (checkResult.htmlWarningCount || 0)}
                   </CardTitle>
                 </CardHeader>
               </Card>
 
-              <Card data-testid="card-passed-count">
+              <Card 
+                data-testid="card-passed-count"
+                className="cursor-pointer hover:bg-accent transition-colors"
+                onClick={() => {
+                  const element = document.getElementById('passed-section');
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardDescription>Пройдено</CardDescription>
@@ -239,18 +261,41 @@ export default function Home() {
               />
             )}
 
+            {/* Violations List */}
+            <div id="critical-section" className="scroll-mt-4">
+              {checkResult.totalViolations > 0 ? (
+                <ViolationsList violations={checkResult.violations as any} />
+              ) : (
+                <Card className="mb-8">
+                  <CardContent className="py-12">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <CheckCircle2 className="h-16 w-16 text-success" />
+                      <div className="text-center">
+                        <p className="text-xl font-semibold mb-2">Отличная работа!</p>
+                        <p className="text-muted-foreground">
+                          Не обнаружено нарушений стандартов доступности WCAG AA
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
             {/* HTML Validation Results */}
-            {((checkResult.htmlValidationMessages && Array.isArray(checkResult.htmlValidationMessages) && checkResult.htmlValidationMessages.length > 0) || checkResult.htmlValidationFailed) && (
-              <div className="mb-8">
-                <HTMLValidationList 
-                  messages={checkResult.htmlValidationMessages as any}
-                  errorCount={checkResult.htmlErrorCount || 0}
-                  warningCount={checkResult.htmlWarningCount || 0}
-                  validationFailed={!!checkResult.htmlValidationFailed}
-                  validationError={checkResult.htmlValidationError || undefined}
-                />
-              </div>
-            )}
+            <div id="warnings-section" className="scroll-mt-4">
+              {((checkResult.htmlValidationMessages && Array.isArray(checkResult.htmlValidationMessages) && checkResult.htmlValidationMessages.length > 0) || checkResult.htmlValidationFailed) && (
+                <div className="mb-8">
+                  <HTMLValidationList 
+                    messages={checkResult.htmlValidationMessages as any}
+                    errorCount={checkResult.htmlErrorCount || 0}
+                    warningCount={checkResult.htmlWarningCount || 0}
+                    validationFailed={!!checkResult.htmlValidationFailed}
+                    validationError={checkResult.htmlValidationError || undefined}
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Extended Checks */}
             {checkResult.extendedChecks && (
@@ -259,23 +304,11 @@ export default function Home() {
               </div>
             )}
 
-            {/* Violations List */}
-            {checkResult.totalViolations > 0 ? (
-              <ViolationsList violations={checkResult.violations as any} />
-            ) : (
-              <Card>
-                <CardContent className="py-12">
-                  <div className="flex flex-col items-center justify-center gap-4">
-                    <CheckCircle2 className="h-16 w-16 text-success" />
-                    <div className="text-center">
-                      <p className="text-xl font-semibold mb-2">Отличная работа!</p>
-                      <p className="text-muted-foreground">
-                        Не обнаружено нарушений стандартов доступности WCAG AA
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Passed Checks */}
+            {checkResult.passes && Array.isArray(checkResult.passes) && checkResult.passes.length > 0 && (
+              <div id="passed-section" className="scroll-mt-4">
+                <PassedChecksList passes={checkResult.passes as any} />
+              </div>
             )}
           </>
         )}
