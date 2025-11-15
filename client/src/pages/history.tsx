@@ -109,6 +109,21 @@ export default function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap items-center gap-4">
+                    {/* WCAG Level Badge */}
+                    {check.wcagLevel && (
+                      <Badge 
+                        className={`${
+                          check.wcagLevel === 'AAA' ? 'bg-green-500 text-white' :
+                          check.wcagLevel === 'AA' ? 'bg-blue-500 text-white' :
+                          check.wcagLevel === 'A' ? 'bg-yellow-500 text-white' :
+                          'bg-red-500 text-white'
+                        }`}
+                        data-testid="badge-wcag-level"
+                      >
+                        {check.wcagLevel === 'fail' ? '✗ Не соответствует' : `Уровень ${check.wcagLevel}`}
+                      </Badge>
+                    )}
+
                     {/* Statistics */}
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">Всего нарушений:</span>

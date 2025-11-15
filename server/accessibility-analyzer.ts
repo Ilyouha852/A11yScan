@@ -450,15 +450,15 @@ function calculateWCAGLevel(violations: ViolationDetail[]): string {
   
   // Check if there are any violations for each WCAG level
   const hasLevelAViolations = violations.some(v => 
-    v.tags && v.tags.some(tag => tag === 'wcag2a' || tag === 'wcag21a')
+    v.tags && v.tags.some(tag => tag === 'wcag2a' || tag === 'wcag21a' || tag === 'wcag22a')
   );
   
   const hasLevelAAViolations = violations.some(v => 
-    v.tags && v.tags.some(tag => tag === 'wcag2aa' || tag === 'wcag21aa')
+    v.tags && v.tags.some(tag => tag === 'wcag2aa' || tag === 'wcag21aa' || tag === 'wcag22aa')
   );
   
   const hasLevelAAAViolations = violations.some(v => 
-    v.tags && v.tags.some(tag => tag === 'wcag2aaa' || tag === 'wcag21aaa')
+    v.tags && v.tags.some(tag => tag === 'wcag2aaa' || tag === 'wcag21aaa' || tag === 'wcag22aaa')
   );
 
   // Determine conformance level:
@@ -552,7 +552,7 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
         axe.run({
           runOnly: {
             type: 'tag',
-            values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
+            values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa']
           }
         }).then((results: any) => {
           resolve(results);

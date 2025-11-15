@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS "accessibility_checks" (
 	"html_validation_messages" TEXT,
 	"html_validation_failed" INTEGER NOT NULL DEFAULT 0,
 	"html_validation_error" TEXT,
-	"extended_checks" TEXT
+	"extended_checks" TEXT,
+	"wcag_level" TEXT
 );
 
 -- Create index on checked_at for faster history queries

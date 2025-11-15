@@ -40,6 +40,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           htmlValidationFailed: analysisResult.htmlValidationFailed ? 1 : 0,
           htmlValidationError: analysisResult.htmlValidationError || null,
           extendedChecks: analysisResult.extendedChecks || null,
+          wcagLevel: analysisResult.wcagLevel,
         });
 
         res.json(check);

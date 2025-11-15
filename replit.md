@@ -27,7 +27,7 @@ This is a fullstack web application for checking website accessibility complianc
 - `database.sqlite` - SQLite database file
 
 ## Key Features
-1. **Accessibility Analysis**: Automated WCAG 2.1 compliance checking using Axe-core
+1. **Accessibility Analysis**: Automated WCAG 2.2 compliance checking using Axe-core
 2. **WCAG Conformance Levels**: Calculates and displays overall conformance level (A, AA, AAA, or fail) based on violation analysis
 3. **HTML Validation**: Validates HTML markup for standards compliance
 4. **Extended Checks**: Additional accessibility checks including:
@@ -72,7 +72,7 @@ The application is configured for Replit's autoscale deployment:
 - Set up Replit workflow and deployment configuration
 - Added `fileMustExist: false` option to better-sqlite3 for automatic database creation
 
-### WCAG 2.1 Enhanced Coverage
+### WCAG 2.2 Enhanced Coverage
 - Added 7 new extended accessibility checks:
   - HTML lang attribute validation (WCAG 3.1.1)
   - Media captions and transcripts detection (WCAG 1.2.1, 1.2.2)

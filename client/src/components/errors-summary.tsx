@@ -289,7 +289,7 @@ export function ErrorsSummary({ violations, htmlErrorCount, htmlWarningCount, ex
           <div className="bg-muted/50 rounded-lg p-4">
             <h4 className="text-sm font-semibold mb-2">📚 Полезные ресурсы</h4>
             <ul className="text-sm space-y-1 text-muted-foreground">
-              <li>• <a href="https://www.w3.org/WAI/WCAG21/quickref/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Руководство WCAG 2.1</a></li>
+              <li>• <a href="https://www.w3.org/WAI/WCAG22/quickref/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Руководство WCAG 2.2</a></li>
               <li>• <a href="https://webaim.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">WebAIM - ресурсы по доступности</a></li>
               <li>• <a href="https://www.nvaccess.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">NVDA - бесплатная программа чтения с экрана</a></li>
             </ul>
