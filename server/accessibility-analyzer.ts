@@ -4,6 +4,7 @@ import type { ViolationDetail, ExtendedChecks } from "@shared/schema";
 import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { existsSync } from "fs";
 import { validateHTML, type HTMLValidationMessage } from "./html-validator";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,9 +34,40 @@ export interface AnalysisResult {
 // Get the system chromium path
 function getChromiumPath(): string | undefined {
   try {
-    const chromiumPath = execSync('which chromium', { encoding: 'utf-8' }).trim();
-    return chromiumPath || undefined;
+    // Try Linux/Unix path first
+    try {
+      const chromiumPath = execSync('which chromium', { encoding: 'utf-8' }).trim();
+      if (chromiumPath) return chromiumPath;
+    } catch {
+      // Continue to Windows check
+    }
+    
+    // Try Windows path
+    if (process.platform === 'win32') {
+      try {
+        // Try common Windows Chrome locations
+        const possiblePaths = [
+          process.env.LOCALAPPDATA + '\\Google\\Chrome\\Application\\chrome.exe',
+          process.env.PROGRAMFILES + '\\Google\\Chrome\\Application\\chrome.exe',
+          process.env['PROGRAMFILES(X86)'] + '\\Google\\Chrome\\Application\\chrome.exe',
+          'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+          'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+        ];
+        
+        for (const path of possiblePaths) {
+          if (path && existsSync(path)) {
+            return path;
+          }
+        }
+      } catch {
+        // Continue to fallback
+      }
+    }
+    
+    // If no system browser found, return undefined to use Puppeteer's bundled Chromium
+    return undefined;
   } catch {
+    // Fallback to Puppeteer's bundled Chromium
     return undefined;
   }
 }
@@ -218,16 +250,26 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
     const chromiumPath = getChromiumPath();
     
     // Launch Puppeteer in headless mode
-    browser = await puppeteer.launch({
+    const launchOptions: any = {
       headless: true,
-      executablePath: chromiumPath,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
       ],
-    });
+    };
+    
+    // Only set executablePath if a system browser was found
+    // Otherwise, Puppeteer will use its bundled Chromium
+    if (chromiumPath) {
+      launchOptions.executablePath = chromiumPath;
+      console.log(`[Accessibility] Using system browser: ${chromiumPath}`);
+    } else {
+      console.log(`[Accessibility] Using Puppeteer's bundled Chromium`);
+    }
+    
+    browser = await puppeteer.launch(launchOptions);
 
     const page = await browser.newPage();
     
@@ -307,7 +349,16 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
     });
 
     // Perform HTML validation
-    const htmlValidation = await validateHTML(htmlContent);
+    let htmlValidation = await validateHTML(htmlContent);
+    
+    // Обогащаем сообщения валидации данными из DOM
+    if (htmlValidation.messages && htmlValidation.messages.length > 0) {
+      const { enrichValidationMessagesWithDOM } = await import('./html-validator');
+      htmlValidation = {
+        ...htmlValidation,
+        messages: await enrichValidationMessagesWithDOM(htmlValidation.messages, page)
+      };
+    }
 
     // Perform extended WCAG checks
     const extendedChecks = await performExtendedChecks(page);

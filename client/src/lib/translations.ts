@@ -207,6 +207,8 @@ export const htmlValidationTranslations: Record<string, string> = {
   "Unexpected end tag": "Неожиданный закрывающий тег",
   "Missing end tag": "Отсутствует закрывающий тег",
   "Misplaced non-space characters": "Неправильно расположенные непробельные символы",
+  "Parse Error": "Ошибка разбора",
+  "Parse error": "Ошибка разбора",
   
   // DOCTYPE and metadata
   "A document must not include both": "Документ не должен содержать одновременно",
@@ -224,4 +226,36 @@ export function translateHTMLValidationMessage(message: string): string {
   });
   
   return translated;
+}
+
+/**
+ * Получить понятное объяснение ошибки Parse error
+ */
+export function getParseErrorExplanation(message: string, extract?: string): string | null {
+  const messageLower = message.toLowerCase();
+  
+  if (!messageLower.includes('parse error')) {
+    return null;
+  }
+  
+  // Определяем тип Parse error по сообщению и extract
+  const extractLower = (extract || '').toLowerCase();
+  
+  // CSS переменные (custom properties)
+  if (message.includes("CSS: \"--\"") || extractLower.includes('--')) {
+    return "Ошибка разбора CSS переменной (custom property). Валидатор может не поддерживать современные CSS переменные. Это часто ложное срабатывание.";
+  }
+  
+  // Современные CSS функции
+  if (message.includes('env(') || message.includes('constant(') || extractLower.includes('env(') || extractLower.includes('constant(')) {
+    return "Ошибка разбора современной CSS функции (env() или constant()). Эти функции поддерживаются браузерами, но старый валидатор их не распознаёт. Это ложное срабатывание.";
+  }
+  
+  // CSS свойства с префиксами или новые свойства
+  if (message.includes('CSS:') && (extractLower.includes('-moz-') || extractLower.includes('-webkit-') || extractLower.includes('-ms-'))) {
+    return "Ошибка разбора CSS свойства с вендорным префиксом. Это может быть ложное срабатывание для устаревших или специфичных свойств.";
+  }
+  
+  // Общий случай Parse error
+  return "Ошибка разбора (Parse Error) означает, что валидатор не может корректно интерпретировать CSS-код. Возможные причины: использование современных CSS-функций (var(), env(), calc()), CSS переменных, или синтаксическая ошибка в CSS.";
 }

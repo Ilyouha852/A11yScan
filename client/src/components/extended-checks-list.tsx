@@ -175,16 +175,11 @@ export function ExtendedChecksList({ checks }: ExtendedChecksListProps) {
                           Элементы с положительным tabindex (максимум: {checks.tabOrder.maxTabindex}):
                         </p>
                         <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                          {checks.tabOrder.elementsWithTabindex.slice(0, 10).map((el, idx) => (
+                          {checks.tabOrder.elementsWithTabindex.map((el, idx) => (
                             <li key={idx} data-testid={`text-tabindex-element-${idx}`}>
                               {el.selector} (tabindex={el.tabindex})
                             </li>
                           ))}
-                          {checks.tabOrder.elementsWithTabindex.length > 10 && (
-                            <li className="text-muted-foreground">
-                              ... и ещё {checks.tabOrder.elementsWithTabindex.length - 10} элементов
-                            </li>
-                          )}
                         </ul>
                       </div>
                     )}

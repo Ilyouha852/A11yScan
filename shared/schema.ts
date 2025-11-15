@@ -1,13 +1,12 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, integer } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Accessibility check results table
-export const accessibilityChecks = pgTable("accessibility_checks", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const accessibilityChecks = sqliteTable("accessibility_checks", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   url: text("url").notNull(),
-  checkedAt: timestamp("checked_at").notNull().defaultNow(),
+  checkedAt: integer("checked_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   
   // Summary statistics
   totalViolations: integer("total_violations").notNull().default(0),
@@ -17,10 +16,10 @@ export const accessibilityChecks = pgTable("accessibility_checks", {
   minorCount: integer("minor_count").notNull().default(0),
   passedCount: integer("passed_count").notNull().default(0),
   
-  // Full results as JSON
-  violations: jsonb("violations").notNull(),
-  passes: jsonb("passes"),
-  incomplete: jsonb("incomplete"),
+  // Full results as JSON (stored as TEXT in SQLite, parsed as JSON)
+  violations: text("violations", { mode: "json" }).notNull(),
+  passes: text("passes", { mode: "json" }),
+  incomplete: text("incomplete", { mode: "json" }),
   
   // Page metadata
   pageTitle: text("page_title"),
@@ -29,12 +28,12 @@ export const accessibilityChecks = pgTable("accessibility_checks", {
   // HTML validation results
   htmlErrorCount: integer("html_error_count").notNull().default(0),
   htmlWarningCount: integer("html_warning_count").notNull().default(0),
-  htmlValidationMessages: jsonb("html_validation_messages"),
+  htmlValidationMessages: text("html_validation_messages", { mode: "json" }),
   htmlValidationFailed: integer("html_validation_failed").notNull().default(0),
   htmlValidationError: text("html_validation_error"),
   
   // Extended WCAG checks
-  extendedChecks: jsonb("extended_checks"),
+  extendedChecks: text("extended_checks", { mode: "json" }),
 });
 
 export const insertAccessibilityCheckSchema = createInsertSchema(accessibilityChecks).omit({

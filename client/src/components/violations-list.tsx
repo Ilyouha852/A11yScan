@@ -10,6 +10,13 @@ import {
 } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertCircle,
   AlertTriangle,
   Info,
@@ -121,9 +128,40 @@ function categorizeViolations(violations: ViolationDetail[]) {
   return Object.entries(categories).filter(([_, items]) => items.length > 0);
 }
 
+type SortBy = "impact" | "count";
+type FilterImpact = "all" | "critical" | "serious" | "moderate" | "minor";
+
 export function ViolationsList({ violations }: ViolationsListProps) {
-  const categorized = categorizeViolations(violations);
+  const [sortBy, setSortBy] = useState<SortBy>("impact");
+  const [filterImpact, setFilterImpact] = useState<FilterImpact>("all");
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+
+  // Sort violations by impact priority
+  const impactPriority = {
+    critical: 0,
+    serious: 1,
+    moderate: 2,
+    minor: 3,
+  };
+
+  // Filter violations first
+  const filtered = violations.filter((v) => filterImpact === "all" || v.impact === filterImpact);
+
+  // Categorize first, then sort within each category
+  const categorizedRaw = categorizeViolations(filtered);
+  
+  // Sort violations within each category
+  const categorized = categorizedRaw.map(([category, items]) => {
+    const sorted = [...items].sort((a, b) => {
+      if (sortBy === "impact") {
+        return impactPriority[a.impact] - impactPriority[b.impact];
+      } else {
+        // Sort by number of affected elements (count)
+        return (b.nodes?.length || 0) - (a.nodes?.length || 0);
+      }
+    });
+    return [category, sorted] as [string, ViolationDetail[]];
+  });
 
   // Initialize with first category expanded
   useEffect(() => {
@@ -143,11 +181,41 @@ export function ViolationsList({ violations }: ViolationsListProps) {
     <div className="space-y-6 mb-8">
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Найденные нарушения</CardTitle>
-          <CardDescription>
-            Нарушения сгруппированы по категориям. Нажмите для просмотра деталей.
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle className="text-xl">Найденные нарушения</CardTitle>
+              <CardDescription>
+                Нарушения сгруппированы по категориям. Нажмите для просмотра деталей.
+              </CardDescription>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortBy)}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Сортировка" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="impact">По критичности</SelectItem>
+                  <SelectItem value="count">По количеству</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterImpact} onValueChange={(value) => setFilterImpact(value as FilterImpact)}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Фильтр" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все нарушения</SelectItem>
+                  <SelectItem value="critical">Критические</SelectItem>
+                  <SelectItem value="serious">Серьезные</SelectItem>
+                  <SelectItem value="moderate">Умеренные</SelectItem>
+                  <SelectItem value="minor">Незначительные</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
+        <CardContent>
+          {/* Filters are displayed in header, content here for spacing if needed */}
+        </CardContent>
       </Card>
 
       {categorized.map(([category, items]) => {
@@ -254,7 +322,7 @@ export function ViolationsList({ violations }: ViolationsListProps) {
                                     Проблемные элементы:
                                   </p>
                                   <div className="space-y-3">
-                                    {violation.nodes.slice(0, 3).map((node, nodeIndex) => (
+                                    {violation.nodes.map((node, nodeIndex) => (
                                       <div
                                         key={nodeIndex}
                                         className="rounded-lg bg-muted p-3 space-y-2"
@@ -292,11 +360,6 @@ export function ViolationsList({ violations }: ViolationsListProps) {
                                         )}
                                       </div>
                                     ))}
-                                    {violation.nodes.length > 3 && (
-                                      <p className="text-xs text-muted-foreground text-center">
-                                        ... и еще {violation.nodes.length - 3} элементов
-                                      </p>
-                                    )}
                                   </div>
                                 </div>
                               )}
