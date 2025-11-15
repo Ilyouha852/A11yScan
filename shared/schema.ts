@@ -34,6 +34,9 @@ export const accessibilityChecks = sqliteTable("accessibility_checks", {
   
   // Extended WCAG checks
   extendedChecks: text("extended_checks", { mode: "json" }),
+  
+  // WCAG conformance level (A, AA, AAA, or 'fail')
+  wcagLevel: text("wcag_level"),
 });
 
 export const insertAccessibilityCheckSchema = createInsertSchema(accessibilityChecks).omit({
@@ -106,6 +109,66 @@ export interface ExtendedChecks {
     hasSetTimeout: boolean;
     hasSetInterval: boolean;
     refreshMeta: boolean;
+    issues: string[];
+  };
+  language: {
+    hasLangAttribute: boolean;
+    langValue: string | null;
+    issues: string[];
+  };
+  mediaAccessibility: {
+    videoWithoutCaptions: number;
+    audioWithoutTranscript: number;
+    elements: Array<{
+      tag: string;
+      selector: string;
+      hasTrack: boolean;
+    }>;
+    issues: string[];
+  };
+  iframes: {
+    iframesWithoutTitle: number;
+    totalIframes: number;
+    elements: Array<{
+      selector: string;
+      hasTitle: boolean;
+      title?: string;
+    }>;
+    issues: string[];
+  };
+  emptyLinks: {
+    count: number;
+    elements: Array<{
+      selector: string;
+      href: string;
+    }>;
+    issues: string[];
+  };
+  placeholderAsLabel: {
+    count: number;
+    elements: Array<{
+      selector: string;
+      hasPlaceholder: boolean;
+      hasLabel: boolean;
+    }>;
+    issues: string[];
+  };
+  tables: {
+    tablesWithoutHeaders: number;
+    totalTables: number;
+    elements: Array<{
+      selector: string;
+      hasHeaders: boolean;
+    }>;
+    issues: string[];
+  };
+  redundantAria: {
+    count: number;
+    elements: Array<{
+      selector: string;
+      element: string;
+      ariaRole: string;
+    }>;
     issues: string[];
   };
 }

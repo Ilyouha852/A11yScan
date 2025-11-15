@@ -29,6 +29,7 @@ export interface AnalysisResult {
   htmlValidationFailed: boolean;
   htmlValidationError?: string;
   extendedChecks: ExtendedChecks;
+  wcagLevel: string;
 }
 
 // Get the system chromium path
@@ -104,6 +105,44 @@ async function performExtendedChecks(page: any): Promise<ExtendedChecks> {
         hasSetTimeout: false,
         hasSetInterval: false,
         refreshMeta: false,
+        issues: [],
+      },
+      language: {
+        hasLangAttribute: false,
+        langValue: null,
+        issues: [],
+      },
+      mediaAccessibility: {
+        videoWithoutCaptions: 0,
+        audioWithoutTranscript: 0,
+        elements: [],
+        issues: [],
+      },
+      iframes: {
+        iframesWithoutTitle: 0,
+        totalIframes: 0,
+        elements: [],
+        issues: [],
+      },
+      emptyLinks: {
+        count: 0,
+        elements: [],
+        issues: [],
+      },
+      placeholderAsLabel: {
+        count: 0,
+        elements: [],
+        issues: [],
+      },
+      tables: {
+        tablesWithoutHeaders: 0,
+        totalTables: 0,
+        elements: [],
+        issues: [],
+      },
+      redundantAria: {
+        count: 0,
+        elements: [],
         issues: [],
       },
     };
@@ -237,10 +276,209 @@ async function performExtendedChecks(page: any): Promise<ExtendedChecks> {
     results.timing.hasSetTimeout = typeof window.setTimeout === 'function';
     results.timing.hasSetInterval = typeof window.setInterval === 'function';
 
+    // 6. Check for lang attribute on html element (WCAG 3.1.1)
+    const htmlElement = document.documentElement;
+    const langAttr = htmlElement.getAttribute('lang');
+    results.language.hasLangAttribute = !!langAttr;
+    results.language.langValue = langAttr;
+    if (!langAttr) {
+      results.language.issues.push('WCAG 3.1.1: Отсутствует атрибут lang у элемента <html>');
+    }
+
+    // 7. Check video/audio for captions/transcripts (WCAG 1.2.2, 1.2.3)
+    const allVideoElements = Array.from(document.querySelectorAll('video'));
+    const allAudioElements = Array.from(document.querySelectorAll('audio'));
+    
+    allVideoElements.forEach((video, idx) => {
+      const hasCaptions = video.querySelector('track[kind="captions"], track[kind="subtitles"]');
+      if (!hasCaptions) {
+        results.mediaAccessibility.videoWithoutCaptions++;
+        results.mediaAccessibility.issues.push(`WCAG 1.2.2: Видео без субтитров/подписей: video:nth-of-type(${idx + 1})`);
+      }
+      results.mediaAccessibility.elements.push({
+        tag: 'video',
+        selector: `video:nth-of-type(${idx + 1})`,
+        hasTrack: !!hasCaptions,
+      });
+    });
+    
+    allAudioElements.forEach((audio, idx) => {
+      const hasTranscript = audio.querySelector('track');
+      if (!hasTranscript) {
+        results.mediaAccessibility.audioWithoutTranscript++;
+        results.mediaAccessibility.issues.push(`WCAG 1.2.1: Аудио без транскрипта: audio:nth-of-type(${idx + 1})`);
+      }
+      results.mediaAccessibility.elements.push({
+        tag: 'audio',
+        selector: `audio:nth-of-type(${idx + 1})`,
+        hasTrack: !!hasTranscript,
+      });
+    });
+
+    // 8. Check iframes for title attribute (WCAG 4.1.2)
+    const iframes = Array.from(document.querySelectorAll('iframe'));
+    results.iframes.totalIframes = iframes.length;
+    iframes.forEach((iframe, idx) => {
+      const hasTitle = iframe.hasAttribute('title') && iframe.getAttribute('title')?.trim() !== '';
+      const title = iframe.getAttribute('title');
+      if (!hasTitle) {
+        results.iframes.iframesWithoutTitle++;
+        results.iframes.issues.push(`WCAG 4.1.2: iframe без title: iframe:nth-of-type(${idx + 1})`);
+      }
+      results.iframes.elements.push({
+        selector: `iframe:nth-of-type(${idx + 1})`,
+        hasTitle,
+        title: title || undefined,
+      });
+    });
+
+    // 9. Check for empty links (WCAG 2.4.4)
+    const links = Array.from(document.querySelectorAll('a[href]'));
+    links.forEach((link) => {
+      const href = link.getAttribute('href') || '';
+      const text = link.textContent?.trim() || '';
+      const ariaLabel = link.getAttribute('aria-label');
+      const ariaLabelledby = link.getAttribute('aria-labelledby');
+      const title = link.getAttribute('title');
+      
+      const hasText = text.length > 0;
+      const hasLabel = ariaLabel || ariaLabelledby || title;
+      
+      if (!hasText && !hasLabel) {
+        results.emptyLinks.count++;
+        let selector = 'a';
+        if (link.id) selector += `#${link.id}`;
+        else if (link.className) selector += `.${link.className.split(' ')[0]}`;
+        results.emptyLinks.elements.push({
+          selector,
+          href,
+        });
+        results.emptyLinks.issues.push(`WCAG 2.4.4: Пустая ссылка без текста или aria-label: ${selector}`);
+      }
+    });
+
+    // 10. Check for placeholder-only form fields (WCAG 3.3.2)
+    const formInputs = Array.from(document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select'));
+    formInputs.forEach((input) => {
+      const hasPlaceholder = input.hasAttribute('placeholder');
+      const id = input.getAttribute('id');
+      const hasLabel = id ? document.querySelector(`label[for="${id}"]`) !== null : false;
+      const ariaLabel = input.getAttribute('aria-label');
+      const ariaLabelledby = input.getAttribute('aria-labelledby');
+      
+      if (hasPlaceholder && !hasLabel && !ariaLabel && !ariaLabelledby) {
+        results.placeholderAsLabel.count++;
+        let selector = input.tagName.toLowerCase();
+        if (input.id) selector += `#${input.id}`;
+        else if (input.className) selector += `.${input.className.split(' ')[0]}`;
+        results.placeholderAsLabel.elements.push({
+          selector,
+          hasPlaceholder,
+          hasLabel,
+        });
+        results.placeholderAsLabel.issues.push(`WCAG 3.3.2: Использование только placeholder вместо label: ${selector}`);
+      }
+    });
+
+    // 11. Check tables for headers (WCAG 1.3.1)
+    const tables = Array.from(document.querySelectorAll('table'));
+    results.tables.totalTables = tables.length;
+    tables.forEach((table, idx) => {
+      const hasHeaders = table.querySelector('th') !== null;
+      if (!hasHeaders) {
+        results.tables.tablesWithoutHeaders++;
+        let selector = `table:nth-of-type(${idx + 1})`;
+        if (table.id) selector = `table#${table.id}`;
+        results.tables.elements.push({
+          selector,
+          hasHeaders,
+        });
+        results.tables.issues.push(`WCAG 1.3.1: Таблица без заголовков <th>: ${selector}`);
+      } else {
+        results.tables.elements.push({
+          selector: `table:nth-of-type(${idx + 1})`,
+          hasHeaders,
+        });
+      }
+    });
+
+    // 12. Check for redundant ARIA (best practice)
+    const elementsWithRole = Array.from(document.querySelectorAll('[role]'));
+    const redundantMappings: Record<string, string[]> = {
+      button: ['button'],
+      link: ['a'],
+      navigation: ['nav'],
+      main: ['main'],
+      header: ['header'],
+      footer: ['footer'],
+      article: ['article'],
+      section: ['section'],
+      aside: ['aside'],
+      form: ['form'],
+    };
+    
+    elementsWithRole.forEach((el) => {
+      const role = el.getAttribute('role');
+      const tagName = el.tagName.toLowerCase();
+      
+      if (role && redundantMappings[role]) {
+        if (redundantMappings[role].includes(tagName)) {
+          results.redundantAria.count++;
+          let selector = tagName;
+          if (el.id) selector += `#${el.id}`;
+          else if (el.className) selector += `.${el.className.split(' ')[0]}`;
+          results.redundantAria.elements.push({
+            selector,
+            element: tagName,
+            ariaRole: role,
+          });
+          results.redundantAria.issues.push(`Best Practice: Избыточное использование role="${role}" на <${tagName}>: ${selector}`);
+        }
+      }
+    });
+
     return results;
   });
 
   return checks;
+}
+
+// Calculate WCAG conformance level based on violations
+function calculateWCAGLevel(violations: ViolationDetail[]): string {
+  // WCAG conformance is determined by which level's success criteria are violated
+  // A site conforms to a level if it satisfies all success criteria at that level
+  
+  // Check if there are any violations for each WCAG level
+  const hasLevelAViolations = violations.some(v => 
+    v.tags && v.tags.some(tag => tag === 'wcag2a' || tag === 'wcag21a' || tag === 'wcag22a')
+  );
+  
+  const hasLevelAAViolations = violations.some(v => 
+    v.tags && v.tags.some(tag => tag === 'wcag2aa' || tag === 'wcag21aa' || tag === 'wcag22aa')
+  );
+  
+  const hasLevelAAAViolations = violations.some(v => 
+    v.tags && v.tags.some(tag => tag === 'wcag2aaa' || tag === 'wcag21aaa' || tag === 'wcag22aaa')
+  );
+
+  // Determine conformance level:
+  // - If there are Level A violations, the site doesn't conform to Level A
+  if (hasLevelAViolations) {
+    return 'fail';
+  }
+  
+  // - If there are Level AA violations (but no A violations), the site conforms to A but not AA
+  if (hasLevelAAViolations) {
+    return 'A';
+  }
+  
+  // - If there are Level AAA violations (but no A or AA violations), the site conforms to AA but not AAA
+  if (hasLevelAAAViolations) {
+    return 'AA';
+  }
+  
+  // - If there are no violations at any level, the site conforms to AAA
+  return 'AAA';
 }
 
 export async function analyzeAccessibility(url: string): Promise<AnalysisResult> {
@@ -314,7 +552,7 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
         axe.run({
           runOnly: {
             type: 'tag',
-            values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
+            values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa']
           }
         }).then((results: any) => {
           resolve(results);
@@ -363,6 +601,9 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
     // Perform extended WCAG checks
     const extendedChecks = await performExtendedChecks(page);
 
+    // Calculate WCAG conformance level
+    const wcagLevel = calculateWCAGLevel(axeResults.violations || []);
+
     return {
       url,
       testedUrl,
@@ -382,6 +623,7 @@ export async function analyzeAccessibility(url: string): Promise<AnalysisResult>
       htmlValidationFailed: htmlValidation.validationFailed,
       htmlValidationError: htmlValidation.validationError,
       extendedChecks,
+      wcagLevel,
     };
 
   } catch (error) {
