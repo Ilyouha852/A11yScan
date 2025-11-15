@@ -27,17 +27,25 @@ This is a fullstack web application for checking website accessibility complianc
 - `database.sqlite` - SQLite database file
 
 ## Key Features
-1. **Accessibility Analysis**: Automated WCAG AA compliance checking using Axe-core
-2. **HTML Validation**: Validates HTML markup for standards compliance
-3. **Extended Checks**: Additional accessibility checks including:
+1. **Accessibility Analysis**: Automated WCAG 2.1 compliance checking using Axe-core
+2. **WCAG Conformance Levels**: Calculates and displays overall conformance level (A, AA, AAA, or fail) based on violation analysis
+3. **HTML Validation**: Validates HTML markup for standards compliance
+4. **Extended Checks**: Additional accessibility checks including:
    - Viewport configuration
    - Autoplay media detection
    - Tab order analysis
    - Focus visibility
    - Timing functions
-4. **Results History**: Stores and displays previous accessibility checks
-5. **Dark Mode**: Full theme support with light/dark mode toggle
-6. **Internationalization**: Russian language interface
+   - HTML lang attribute (WCAG 3.1.1)
+   - Media captions and transcripts (WCAG 1.2.1, 1.2.2)
+   - iframe title attributes (WCAG 4.1.2)
+   - Empty links detection (WCAG 2.4.4)
+   - Placeholder-only form labels (WCAG 3.3.2)
+   - Table headers (WCAG 1.3.1)
+   - Redundant ARIA usage
+5. **Results History**: Stores and displays previous accessibility checks with conformance levels
+6. **Dark Mode**: Full theme support with light/dark mode toggle
+7. **Internationalization**: Russian language interface
 
 ## Database Configuration
 The application uses SQLite for data persistence. The database is configured to:
@@ -57,11 +65,30 @@ The application is configured for Replit's autoscale deployment:
 - **Target**: Autoscale (stateless deployment suitable for web apps)
 
 ## Recent Changes (November 15, 2025)
+### Initial Setup
 - Imported from GitHub repository
 - Fixed database path resolution to use `process.cwd()` instead of relative paths
 - Configured to ignore PostgreSQL DATABASE_URL and use SQLite
 - Set up Replit workflow and deployment configuration
 - Added `fileMustExist: false` option to better-sqlite3 for automatic database creation
+
+### WCAG 2.1 Enhanced Coverage
+- Added 7 new extended accessibility checks:
+  - HTML lang attribute validation (WCAG 3.1.1)
+  - Media captions and transcripts detection (WCAG 1.2.1, 1.2.2)
+  - iframe title attribute verification (WCAG 4.1.2)
+  - Empty links detection (WCAG 2.4.4)
+  - Placeholder-only form labels detection (WCAG 3.3.2)
+  - Table headers validation (WCAG 1.3.1)
+  - Redundant ARIA usage detection
+- Implemented WCAG conformance level calculation (A, AA, AAA, fail)
+  - Uses violation WCAG tags (wcag2a/wcag21a, wcag2aa/wcag21aa, wcag2aaa/wcag21aaa)
+  - Correctly determines overall conformance based on highest level violated
+- Added `wcag_level` field to database schema with migration
+- Created prominent WCAG level badge display on frontend results page
+  - Color-coded badges (green=AAA, blue=AA, yellow=A, red=fail)
+  - Descriptive text explaining conformance level
+  - Large visual indicator for quick assessment
 
 ## Notes
 - The application uses in-memory caching for performance
