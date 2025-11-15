@@ -156,6 +156,51 @@ export default function Home() {
         {/* Results */}
         {hasResults && (
           <>
+            {/* WCAG Conformance Level */}
+            <div className="mb-8">
+              <Card className={`border-2 ${
+                checkResult.wcagLevel === 'AAA' ? 'border-green-500 bg-green-50 dark:bg-green-950' :
+                checkResult.wcagLevel === 'AA' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' :
+                checkResult.wcagLevel === 'A' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950' :
+                'border-red-500 bg-red-50 dark:bg-red-950'
+              }`} data-testid="card-wcag-level">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardDescription className="text-base mb-2">Уровень соответствия WCAG 2.1</CardDescription>
+                      <CardTitle className={`text-5xl font-bold ${
+                        checkResult.wcagLevel === 'AAA' ? 'text-green-700 dark:text-green-300' :
+                        checkResult.wcagLevel === 'AA' ? 'text-blue-700 dark:text-blue-300' :
+                        checkResult.wcagLevel === 'A' ? 'text-yellow-700 dark:text-yellow-300' :
+                        'text-red-700 dark:text-red-300'
+                      }`}>
+                        {checkResult.wcagLevel === 'fail' ? 'Не соответствует' : `Уровень ${checkResult.wcagLevel}`}
+                      </CardTitle>
+                      <p className={`text-sm mt-2 ${
+                        checkResult.wcagLevel === 'AAA' ? 'text-green-600 dark:text-green-400' :
+                        checkResult.wcagLevel === 'AA' ? 'text-blue-600 dark:text-blue-400' :
+                        checkResult.wcagLevel === 'A' ? 'text-yellow-600 dark:text-yellow-400' :
+                        'text-red-600 dark:text-red-400'
+                      }`}>
+                        {checkResult.wcagLevel === 'AAA' && 'Отличный результат! Сайт соответствует самому высокому уровню доступности WCAG 2.1 AAA'}
+                        {checkResult.wcagLevel === 'AA' && 'Хороший результат! Сайт соответствует уровню WCAG 2.1 AA (рекомендуемый стандарт)'}
+                        {checkResult.wcagLevel === 'A' && 'Сайт соответствует базовому уровню WCAG 2.1 A, но есть нарушения уровня AA'}
+                        {checkResult.wcagLevel === 'fail' && 'Обнаружены критические нарушения базового уровня WCAG 2.1 A. Требуется исправление'}
+                      </p>
+                    </div>
+                    <div className={`text-8xl font-black opacity-20 ${
+                      checkResult.wcagLevel === 'AAA' ? 'text-green-700 dark:text-green-300' :
+                      checkResult.wcagLevel === 'AA' ? 'text-blue-700 dark:text-blue-300' :
+                      checkResult.wcagLevel === 'A' ? 'text-yellow-700 dark:text-yellow-300' :
+                      'text-red-700 dark:text-red-300'
+                    }`}>
+                      {checkResult.wcagLevel === 'fail' ? '✗' : checkResult.wcagLevel}
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            </div>
+
             {/* Summary Statistics - Accessibility */}
             <div className="mb-6">
               <h2 className="text-lg font-semibold mb-4">Статистика доступности</h2>

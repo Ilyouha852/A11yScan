@@ -19,57 +19,76 @@ export async function runMigrations() {
     `).get();
     
     if (tableCheck) {
-      console.log("[Migration] Table 'accessibility_checks' already exists, skipping");
-      return;
-    }
-    
-    // Create table directly
-    console.log("[Migration] Creating 'accessibility_checks' table...");
-    sqlite.exec(`
-      CREATE TABLE "accessibility_checks" (
-        "id" TEXT PRIMARY KEY,
-        "url" TEXT NOT NULL,
-        "checked_at" INTEGER NOT NULL,
-        "total_violations" INTEGER NOT NULL DEFAULT 0,
-        "critical_count" INTEGER NOT NULL DEFAULT 0,
-        "serious_count" INTEGER NOT NULL DEFAULT 0,
-        "moderate_count" INTEGER NOT NULL DEFAULT 0,
-        "minor_count" INTEGER NOT NULL DEFAULT 0,
-        "passed_count" INTEGER NOT NULL DEFAULT 0,
-        "violations" TEXT NOT NULL,
-        "passes" TEXT,
-        "incomplete" TEXT,
-        "page_title" TEXT,
-        "tested_url" TEXT,
-        "html_error_count" INTEGER NOT NULL DEFAULT 0,
-        "html_warning_count" INTEGER NOT NULL DEFAULT 0,
-        "html_validation_messages" TEXT,
-        "html_validation_failed" INTEGER NOT NULL DEFAULT 0,
-        "html_validation_error" TEXT,
-        "extended_checks" TEXT
-      );
-    `);
-    
-    // Create indexes
-    sqlite.exec(`
-      CREATE INDEX "accessibility_checks_checked_at_idx" ON "accessibility_checks" ("checked_at" DESC);
-    `);
-    
-    sqlite.exec(`
-      CREATE INDEX "accessibility_checks_url_idx" ON "accessibility_checks" ("url");
-    `);
-    
-    // Verify table was created
-    const verifyCheck = sqlite.prepare(`
-      SELECT name FROM sqlite_master 
-      WHERE type='table' AND name='accessibility_checks'
-    `).get();
-    
-    if (verifyCheck) {
-      console.log("[Migration] Database migrations completed successfully");
+      console.log("[Migration] Table 'accessibility_checks' already exists");
+      // Continue to check for column migrations
     } else {
-      throw new Error("Table was not created successfully");
+      // Create table directly
+      console.log("[Migration] Creating 'accessibility_checks' table...");
+      sqlite.exec(`
+        CREATE TABLE "accessibility_checks" (
+          "id" TEXT PRIMARY KEY,
+          "url" TEXT NOT NULL,
+          "checked_at" INTEGER NOT NULL,
+          "total_violations" INTEGER NOT NULL DEFAULT 0,
+          "critical_count" INTEGER NOT NULL DEFAULT 0,
+          "serious_count" INTEGER NOT NULL DEFAULT 0,
+          "moderate_count" INTEGER NOT NULL DEFAULT 0,
+          "minor_count" INTEGER NOT NULL DEFAULT 0,
+          "passed_count" INTEGER NOT NULL DEFAULT 0,
+          "violations" TEXT NOT NULL,
+          "passes" TEXT,
+          "incomplete" TEXT,
+          "page_title" TEXT,
+          "tested_url" TEXT,
+          "html_error_count" INTEGER NOT NULL DEFAULT 0,
+          "html_warning_count" INTEGER NOT NULL DEFAULT 0,
+          "html_validation_messages" TEXT,
+          "html_validation_failed" INTEGER NOT NULL DEFAULT 0,
+          "html_validation_error" TEXT,
+          "extended_checks" TEXT,
+          "wcag_level" TEXT
+        );
+      `);
+      
+      // Create indexes
+      sqlite.exec(`
+        CREATE INDEX "accessibility_checks_checked_at_idx" ON "accessibility_checks" ("checked_at" DESC);
+      `);
+      
+      sqlite.exec(`
+        CREATE INDEX "accessibility_checks_url_idx" ON "accessibility_checks" ("url");
+      `);
+      
+      // Verify table was created
+      const verifyCheck = sqlite.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='accessibility_checks'
+      `).get();
+      
+      if (verifyCheck) {
+        console.log("[Migration] Table created successfully");
+      } else {
+        throw new Error("Table was not created successfully");
+      }
     }
+    
+    // Check if wcag_level column exists, add if missing (for existing databases)
+    const columnCheck = sqlite.prepare(`
+      SELECT COUNT(*) as count 
+      FROM pragma_table_info('accessibility_checks') 
+      WHERE name='wcag_level'
+    `).get() as { count: number };
+    
+    if (columnCheck.count === 0) {
+      console.log("[Migration] Adding 'wcag_level' column...");
+      sqlite.exec(`
+        ALTER TABLE "accessibility_checks" 
+        ADD COLUMN "wcag_level" TEXT;
+      `);
+      console.log("[Migration] Column 'wcag_level' added successfully");
+    }
+    
+    console.log("[Migration] Database migrations completed successfully");
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (
