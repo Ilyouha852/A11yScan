@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  accessibility-checker:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./database.sqlite:/app/database.sqlite
+    restart: unless-stopped
